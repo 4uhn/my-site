@@ -1,0 +1,278 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Menu from "../components/Menu.astro";
+import SocialLinks from "../components/SocialLinks.astro";
+
+const projects = [
+  {
+    id: "countertime",
+    title: "CounterTime",
+    description: "Proof of Concept educational game built for IBM to increase SkillsBuild engagement.",
+    details: `• Collaborated in a 7-person team following weekly SCRUM Sprints and regular client communication to build the PoC that increases IBM SkillsBuild engagement and accessibility for professional development.
+
+• Developed a conversational AI agent using the LangGraph framework, implementing state management, agentic workflows and tools to create an interactive learning companion.
+
+• Incorporated a Retrieval Augmented Generation (RAG) system with Chroma vector databases for IBM SkillsBuild questions (97% accuracy), enhancing the AI's retrieval capabilities on user query.
+
+• Used MongoDB for conversation persistence to give more contextual awareness and FastAPI for effective communication between the Godot game engine and AI model (BonsAI).`,
+    tags: ["LangGraph", "RAG", "MongoDB", "FastAPI", "Godot"],
+    link: "#",
+  },
+  {
+    id: "ff",
+    title: "FF - An AI Powered Financial Analysis System",
+    description: "An AI-powered financial analysis system for market intelligence and trading insights.",
+    details: `• Started working on a comprehensive AI-powered financial analysis system with modular components designed to provide market intelligence and data-driven trading insights.
+
+• Built an end-to-end news summarization pipeline through Alpha Vantage API integration and real-time Yahoo Finance web scraping with Crawl4AI, leveraging LLaMA 3.2-3B model to capture key market information, enabling users to rapidly digest daily financial news and extract actionable opportunities.
+
+• Fine-tuned Gemma 3 270M using PyTorch and Unsloth to develop a custom financial sentiment analyzer for quantitative market analysis, trained on 28k+ samples across 4 specialized financial datasets. Achieved 85.5% best test accuracy.`,
+    tags: ["PyTorch", "LLM Fine-tuning", "NLP", "Web Scraping"],
+    link: "#",
+  },
+  {
+    id: "aws-hackathon",
+    title: "AWS Agentic Networks Hackathon",
+    description: "Energy optimization agent for telecom networks using AI and digital twin simulations.",
+    details: `• Developed deep understanding of the O-RAN Alliance architecture, Radio frequency optimization strategies and advancements towards AI-native 6G networks, applying learnt knowledge to our project.
+
+• Deployed a Model Context Protocol (MCP) server exposing the VIAVI ADK for RAN Scenario Generator to AWS AgentCore Runtime, implemented stateless design handling 5 core tools, enabling distributed AI agents to run digital twin simulations of networks.
+
+• Built an Energy Optimization Agent using Strands and Claude 3 Sonnet on AWS Bedrock, orchestrated multi-step agentic workflow with intelligent tool calling and adaptive prompt generation informed by simulation KPIs for improved decision-making across iterations.`,
+    tags: ["AWS", "MCP", "AI Agents", "6G/Telecom", "Claude"],
+    link: "#",
+  },
+];
+---
+
+<Layout
+  title="jacobchau"
+  description="Selected projects and work"
+>
+  <Menu currentPage="projects" />
+  <SocialLinks />
+
+  <main class="min-h-screen flex items-center justify-center px-8 py-24 page-enter">
+    <div class="max-w-2xl w-full">
+      <!-- Page Header -->
+      <header class="mb-16 animate-fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-text)] mb-4" style="font-family: var(--font-display);">
+          Projects<span class="text-[var(--color-accent)]">.</span>
+        </h1>
+        <p class="text-[var(--color-muted)] text-lg">
+          Selected work and experiments
+        </p>
+      </header>
+
+      <!-- Projects List -->
+      <div class="space-y-12">
+        {projects.map((project, index) => (
+          <article
+            class="project-card group animate-fade-in cursor-pointer"
+            style={`animation-delay: ${(index + 1) * 0.1}s`}
+            data-project-id={project.id}
+          >
+            <div class="flex items-start justify-between gap-4 mb-3">
+              <h2 class="text-xl font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors duration-300">
+                {project.title}
+              </h2>
+              <span class="text-[var(--color-accent)] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                +
+              </span>
+            </div>
+            <p class="text-[var(--color-text-secondary)] mb-4 leading-relaxed">
+              {project.description}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {project.tags.map((tag) => (
+                <span class="text-xs font-mono text-[var(--color-muted)] px-2 py-1 border border-[var(--color-border)] rounded">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Overlay -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div id="modal-content" class="modal-content">
+      <div class="modal-glass"></div>
+      <div class="modal-inner">
+        <button id="modal-close" class="modal-close" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-[var(--color-text)] mb-4" style="font-family: var(--font-display);"></h2>
+
+        <div id="modal-tags" class="flex flex-wrap gap-2 mb-6"></div>
+
+        <p id="modal-details" class="text-[var(--color-text-secondary)] leading-relaxed"></p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .project-card {
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+    transition: all 0.3s ease;
+  }
+
+  .project-card:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .project-card:hover {
+    padding-left: 1rem;
+  }
+
+  /* Modal Styles - Liquid Glass Effect */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .modal-overlay.visible {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-content {
+    position: relative;
+    max-width: 40rem;
+    width: 90vw;
+    max-height: 85vh;
+    border-radius: 1.25rem;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+  }
+
+  /* Glass layer - Theme-aware */
+  .modal-glass {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      145deg,
+      var(--glass-bg) 0%,
+      var(--glass-bg-end) 100%
+    );
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.25rem;
+    box-shadow:
+      0 8px 40px var(--glass-shadow),
+      0 0 0 1px var(--glass-highlight) inset,
+      0 1px 0 var(--glass-highlight-top) inset;
+  }
+
+  /* Inner content */
+  .modal-inner {
+    position: relative;
+    padding: 2.5rem;
+    z-index: 1;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  /* Details text - preserve line breaks */
+  #modal-details {
+    white-space: pre-line;
+    line-height: 1.8;
+  }
+
+  .modal-overlay.visible .modal-content {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    color: var(--color-muted);
+    padding: 0.5rem;
+    border-radius: 50%;
+    background: var(--glass-btn-bg);
+    border: 1px solid var(--glass-btn-border);
+    transition: all 0.2s ease;
+  }
+
+  .modal-close:hover {
+    color: var(--color-text);
+    background: var(--glass-btn-hover);
+    border-color: var(--glass-border);
+  }
+</style>
+
+<script define:vars={{ projects }}>
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalTitle = document.getElementById('modal-title');
+  const modalTags = document.getElementById('modal-tags');
+  const modalDetails = document.getElementById('modal-details');
+  const modalClose = document.getElementById('modal-close');
+
+  // Open modal when clicking a project
+  document.querySelectorAll('.project-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const projectId = card.getAttribute('data-project-id');
+      const project = projects.find((p) => p.id === projectId);
+
+      if (project) {
+        modalTitle.textContent = project.title;
+        modalDetails.textContent = project.details;
+
+        // Clear and populate tags
+        modalTags.innerHTML = '';
+        project.tags.forEach((tag) => {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'text-xs font-mono px-2 py-1 rounded-full';
+          tagEl.style.cssText = 'background: var(--glass-btn-hover); color: var(--color-text-secondary); border: 1px solid var(--glass-border);';
+          tagEl.textContent = tag;
+          modalTags.appendChild(tagEl);
+        });
+
+        // Show modal
+        modalOverlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  });
+
+  // Close modal
+  function closeModal() {
+    modalOverlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+
+  modalClose?.addEventListener('click', closeModal);
+  modalOverlay?.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay?.classList.contains('visible')) {
+      closeModal();
+    }
+  });
+</script>

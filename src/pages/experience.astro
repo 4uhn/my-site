@@ -1,0 +1,151 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Menu from "../components/Menu.astro";
+import SocialLinks from "../components/SocialLinks.astro";
+
+const experiences = [
+  {
+    role: "Data Scientist Intern",
+    company: "Verisk",
+    period: "Summer 2026",
+    description: "",
+    highlights: [],
+  },
+];
+
+const education = {
+  degree: "MEng Computer Science",
+  institution: "Durham University",
+  period: "2023 — 2027",
+  details: "Expected First Class Honours",
+};
+---
+
+<Layout
+  title="jacobchau"
+  description="Professional experience and education"
+>
+  <Menu currentPage="experience" />
+  <SocialLinks />
+
+  <main class="min-h-screen flex items-center justify-center px-8 py-24 page-enter">
+    <div class="max-w-2xl w-full">
+      <!-- Page Header -->
+      <header class="mb-16 animate-fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-text)] mb-4" style="font-family: var(--font-display);">
+          Experience<span class="text-[var(--color-accent)]">.</span>
+        </h1>
+        <p class="text-[var(--color-muted)] text-lg">
+          Where I've worked and what I've learned
+        </p>
+      </header>
+
+      <!-- Experience Timeline -->
+      <section class="mb-16">
+        <div class="space-y-10">
+          {experiences.map((exp, index) => (
+            <article
+              class="experience-item group animate-fade-in"
+              style={`animation-delay: ${(index + 1) * 0.1}s`}
+            >
+              <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 mb-3">
+                <div>
+                  <h2 class="text-lg font-medium text-[var(--color-text)]">
+                    {exp.role}
+                  </h2>
+                  <p class="text-[var(--color-accent)] text-sm">
+                    {exp.company}
+                  </p>
+                </div>
+                <span class="text-sm font-mono text-[var(--color-muted)]">
+                  {exp.period}
+                </span>
+              </div>
+              {exp.description && (
+                <p class="text-[var(--color-text-secondary)] mb-3 leading-relaxed">
+                  {exp.description}
+                </p>
+              )}
+              {exp.highlights.length > 0 && (
+                <ul class="space-y-1">
+                  {exp.highlights.map((highlight) => (
+                    <li class="flex items-start gap-2 text-sm text-[var(--color-muted)]">
+                      <span class="text-[var(--color-accent)] mt-1">&#8226;</span>
+                      <span>{highlight}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <!-- Education -->
+      <section class="animate-fade-in animate-delay-200">
+        <h2 class="text-sm font-mono text-[var(--color-muted)] uppercase tracking-wider mb-6">
+          Education
+        </h2>
+        <div class="education-item">
+          <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 mb-2">
+            <div>
+              <h3 class="text-lg font-medium text-[var(--color-text)]">
+                {education.degree}
+              </h3>
+              <p class="text-[var(--color-accent)] text-sm">
+                {education.institution}
+              </p>
+            </div>
+            <span class="text-sm font-mono text-[var(--color-muted)]">
+              {education.period}
+            </span>
+          </div>
+          <p class="text-[var(--color-text-secondary)] text-sm">
+            {education.details}
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .experience-item {
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--color-border);
+    transition: all 0.3s ease;
+  }
+
+  .experience-item::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--color-border);
+    transition: all 0.3s ease;
+  }
+
+  .experience-item:hover::before {
+    background-color: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent);
+  }
+
+  .experience-item:hover {
+    border-left-color: var(--color-accent);
+  }
+
+  .education-item {
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .education-item:hover {
+    border-color: var(--color-accent);
+  }
+</style>

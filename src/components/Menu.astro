@@ -1,0 +1,231 @@
+---
+interface Props {
+  currentPage?: string;
+}
+
+const { currentPage = "" } = Astro.props;
+
+const navItems = [
+  { name: "Home", href: "/" },
+  { name: "Projects", href: "/projects" },
+  { name: "Experience", href: "/experience" },
+  { name: "Contact", href: "/contact" },
+];
+---
+
+<!-- Mobile: Horizontal nav bar at top -->
+<nav class="mobile-nav">
+  <ul class="flex items-center gap-6">
+    {navItems.map((item) => (
+      <li>
+        <a
+          href={item.href}
+          class:list={[
+            "mobile-nav-item text-sm transition-colors duration-200",
+            currentPage === item.name.toLowerCase()
+              ? "text-[var(--color-text)]"
+              : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+          ]}
+        >
+          {item.name}
+          {currentPage === item.name.toLowerCase() && (
+            <span class="mobile-dot"></span>
+          )}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<!-- Desktop: Hover dropdown menu -->
+<div class="desktop-menu fixed top-8 left-8 z-50">
+  <div id="menu-container" class="menu-container">
+    <!-- Menu Icon -->
+    <div
+      id="menu-toggle"
+      class="menu-button flex items-center text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-300 cursor-pointer"
+      aria-label="Menu"
+    >
+      <div class="menu-icon">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+      </div>
+    </div>
+
+    <!-- Dropdown Menu -->
+    <nav id="menu-dropdown" class="menu-dropdown">
+      <ul class="flex flex-col gap-1">
+        {navItems.map((item, index) => (
+          <li style={`animation-delay: ${index * 0.05}s`}>
+            <a
+              href={item.href}
+              class:list={[
+                "menu-item flex items-center gap-3 py-2 text-base transition-colors duration-200",
+                currentPage === item.name.toLowerCase()
+                  ? "text-[var(--color-text)]"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+              ]}
+            >
+              <span class="text-[var(--color-accent)] text-xs font-mono opacity-0 transition-opacity duration-200 menu-arrow">&#8594;</span>
+              <span>{item.name}</span>
+              {currentPage === item.name.toLowerCase() && (
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] ml-1"></span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<style>
+  /* Mobile nav - horizontal at top */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    padding: 1rem 1.5rem;
+    background: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-nav ul {
+    justify-content: center;
+  }
+
+  .mobile-nav-item {
+    position: relative;
+    padding: 0.25rem 0;
+  }
+
+  .mobile-dot {
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+  }
+
+  /* Desktop menu - dropdown */
+  .desktop-menu {
+    display: block;
+  }
+
+  .menu-container {
+    position: relative;
+  }
+
+  .menu-button {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .menu-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 18px;
+  }
+
+  .bar {
+    display: block;
+    width: 100%;
+    height: 1.5px;
+    background-color: currentColor;
+    transition: all 0.3s ease;
+    transform-origin: center;
+  }
+
+  .menu-container.active .bar-1 {
+    transform: translateY(2.75px) rotate(45deg);
+  }
+
+  .menu-container.active .bar-2 {
+    transform: translateY(-2.75px) rotate(-45deg);
+  }
+
+  .menu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.75rem;
+    padding: 0.75rem 0;
+    min-width: 160px;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .menu-container.active .menu-dropdown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .menu-dropdown li {
+    opacity: 0;
+    transform: translateX(-10px);
+    animation: menuItemIn 0.3s ease forwards;
+    animation-play-state: paused;
+  }
+
+  .menu-container.active .menu-dropdown li {
+    animation-play-state: running;
+  }
+
+  @keyframes menuItemIn {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .menu-item:hover .menu-arrow {
+    opacity: 1;
+  }
+
+  /* Responsive breakpoint - switch at 994px to prevent dropdown overlapping content */
+  @media (max-width: 994px) {
+    .mobile-nav {
+      display: block;
+    }
+
+    .desktop-menu {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const menuContainer = document.getElementById('menu-container');
+
+  let hideTimeout: number | null = null;
+
+  function showMenu() {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    menuContainer?.classList.add('active');
+  }
+
+  function hideMenu() {
+    // Small delay before hiding to allow moving to dropdown
+    hideTimeout = window.setTimeout(() => {
+      menuContainer?.classList.remove('active');
+    }, 150);
+  }
+
+  menuContainer?.addEventListener('mouseenter', showMenu);
+  menuContainer?.addEventListener('mouseleave', hideMenu);
+</script>

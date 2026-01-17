@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+}
+
+/* ========================================
+   THEME SYSTEM - Dark (default) & Light
+   ======================================== */
+
+:root {
+  /* Accent colors - SAME for both themes (the red dot stays red) */
+  --color-accent: #be123c;
+  --color-accent-dark: #9f1239;
+  --color-accent-hover: #e11d48;
+}
+
+/* Dark Theme (Default) */
+:root,
+:root[data-theme="dark"] {
+  --color-background: #0a0a0b;
+  --color-surface: #111113;
+  --color-border: #1f1f23;
+  --color-muted: #71717a;
+  --color-text: #fafafa;
+  --color-text-secondary: #a1a1aa;
+
+  /* Glass effect colors */
+  --glass-bg: rgba(17, 17, 19, 0.85);
+  --glass-bg-end: rgba(10, 10, 11, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+  --glass-highlight-top: rgba(255, 255, 255, 0.06);
+  --glass-shadow: rgba(0, 0, 0, 0.5);
+  --glass-btn-bg: rgba(255, 255, 255, 0.03);
+  --glass-btn-border: rgba(255, 255, 255, 0.05);
+  --glass-btn-hover: rgba(255, 255, 255, 0.08);
+  --overlay-bg: rgba(10, 10, 11, 0.6);
+}
+
+/* Light Theme (Apple White) */
+:root[data-theme="light"] {
+  --color-background: #ffffff;
+  --color-surface: #f5f5f7;
+  --color-border: #d2d2d7;
+  --color-muted: #86868b;
+  --color-text: #1d1d1f;
+  --color-text-secondary: #515154;
+
+  /* Glass effect colors - Light mode (clean white with subtle definition) */
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-bg-end: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.7);
+  --glass-highlight-top: rgba(255, 255, 255, 0.85);
+  --glass-shadow: rgba(0, 0, 0, 0.1);
+  --glass-btn-bg: rgba(0, 0, 0, 0.04);
+  --glass-btn-border: rgba(0, 0, 0, 0.08);
+  --glass-btn-hover: rgba(0, 0, 0, 0.06);
+  --overlay-bg: rgba(0, 0, 0, 0.25);
+}
+
+/* ========================================
+   VIEW TRANSITION ANIMATIONS
+   ======================================== */
+
+/* Theme toggle animation - circular expansion from click point */
+::view-transition-old(root),
+::view-transition-new(root) {
+  /* Disable default crossfade animation */
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0s, color 0s;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+/* Subtle link underline animation */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* Fade in animation - pure opacity for smoothest performance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.7s ease-out forwards;
+}
+
+.animate-delay-100 { animation-delay: 0.12s; }
+.animate-delay-200 { animation-delay: 0.18s; }
+.animate-delay-300 { animation-delay: 0.24s; }
+.animate-delay-400 { animation-delay: 0.3s; }
+.animate-delay-500 { animation-delay: 0.36s; }
+.animate-delay-600 { animation-delay: 0.42s; }
+
+/* Page transition - simple fade */
+.page-enter {
+  opacity: 0;
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .page-enter {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Slide down animation for menu */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* Scale on hover */
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}

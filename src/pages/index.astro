@@ -1,0 +1,289 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SocialLinks from "../components/SocialLinks.astro";
+---
+
+<Layout
+  title="jacobchau"
+  description="Software Engineer, Data Scientist & ML Engineer"
+>
+  <main class="min-h-screen flex flex-col items-center justify-center relative page-enter">
+    <!-- Animated Logo -->
+    <div class="logo-wrapper cursor-pointer" id="logo-wrapper">
+      <h1 class="logo-text" style="font-family: var(--font-display);">
+        <span class="letter-group">
+          <span class="letter visible">j</span><span class="letter hidden-letter">a</span><span class="letter hidden-letter">c</span><span class="letter hidden-letter">o</span><span class="letter hidden-letter">b</span>
+        </span>
+        <span class="space hidden-letter">&nbsp;</span>
+        <span class="letter-group">
+          <span class="letter visible">c</span><span class="letter hidden-letter">h</span><span class="letter hidden-letter">a</span><span class="letter hidden-letter">u</span>
+        </span>
+        <span class="dot">.</span>
+      </h1>
+    </div>
+
+    <!-- Navigation links (hidden initially, shown after logo expands) -->
+    <nav class="nav-links mt-16" id="nav-links">
+      <ul class="flex flex-col items-center gap-6">
+        <li class="nav-item-wrapper">
+          <a
+            href="/projects"
+            class="nav-item group flex items-center gap-3 text-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-300"
+          >
+            <span class="arrow text-[var(--color-accent)] text-sm font-mono">&#8594;</span>
+            <span>Projects</span>
+          </a>
+        </li>
+        <li class="nav-item-wrapper">
+          <a
+            href="/experience"
+            class="nav-item group flex items-center gap-3 text-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-300"
+          >
+            <span class="arrow text-[var(--color-accent)] text-sm font-mono">&#8594;</span>
+            <span>Experience</span>
+          </a>
+        </li>
+        <li class="nav-item-wrapper">
+          <a
+            href="/contact"
+            class="nav-item group flex items-center gap-3 text-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-300"
+          >
+            <span class="arrow text-[var(--color-accent)] text-sm font-mono">&#8594;</span>
+            <span>Contact</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Social Links -->
+    <SocialLinks />
+  </main>
+</Layout>
+
+<style>
+  .logo-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-text {
+    font-size: clamp(4rem, 12vw, 7rem);
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+    display: flex;
+    align-items: baseline;
+  }
+
+  .letter-group {
+    display: inline-flex;
+    overflow: hidden;
+  }
+
+  .letter {
+    display: inline-block;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hidden-letter {
+    max-width: 0;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .space {
+    display: inline-block;
+    max-width: 0;
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dot {
+    color: var(--color-accent);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .dot:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px var(--color-accent));
+  }
+
+  /* Expanded state */
+  .logo-wrapper.expanded .hidden-letter {
+    max-width: 1em;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .logo-wrapper.expanded .space {
+    max-width: 0.3em;
+    opacity: 1;
+  }
+
+  /* Staggered letter animations */
+  .logo-wrapper.expanded .letter-group:first-child .letter:nth-child(2) { transition-delay: 0.05s; }
+  .logo-wrapper.expanded .letter-group:first-child .letter:nth-child(3) { transition-delay: 0.1s; }
+  .logo-wrapper.expanded .letter-group:first-child .letter:nth-child(4) { transition-delay: 0.15s; }
+  .logo-wrapper.expanded .letter-group:first-child .letter:nth-child(5) { transition-delay: 0.2s; }
+
+  .logo-wrapper.expanded .space { transition-delay: 0.25s; }
+
+  .logo-wrapper.expanded .letter-group:last-child .letter:nth-child(2) { transition-delay: 0.3s; }
+  .logo-wrapper.expanded .letter-group:last-child .letter:nth-child(3) { transition-delay: 0.35s; }
+  .logo-wrapper.expanded .letter-group:last-child .letter:nth-child(4) { transition-delay: 0.4s; }
+
+  /* Navigation */
+  .nav-links {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-links.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .nav-item-wrapper {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-links.visible .nav-item-wrapper:nth-child(1) {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.1s;
+  }
+  .nav-links.visible .nav-item-wrapper:nth-child(2) {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.2s;
+  }
+  .nav-links.visible .nav-item-wrapper:nth-child(3) {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.3s;
+  }
+
+  .nav-item {
+    position: relative;
+  }
+
+  .arrow {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.3s ease;
+  }
+
+  .nav-item:hover .arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .nav-item::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--color-accent);
+    transition: width 0.3s ease;
+  }
+
+  .nav-item:hover::after {
+    width: 100%;
+  }
+</style>
+
+<script>
+  const logoWrapper = document.getElementById('logo-wrapper');
+  const navLinks = document.getElementById('nav-links');
+  const dot = document.querySelector('.dot');
+
+  let isExpanded = false;
+  let hoverTimeout: number | null = null;
+
+  logoWrapper?.addEventListener('mouseenter', () => {
+    if (isExpanded) return;
+
+    // Small delay before starting animation
+    hoverTimeout = window.setTimeout(() => {
+      // Expand the logo letters
+      logoWrapper.classList.add('expanded');
+
+      // Show navigation after letters finish animating
+      setTimeout(() => {
+        navLinks?.classList.add('visible');
+        isExpanded = true;
+      }, 600);
+    }, 150);
+  });
+
+  logoWrapper?.addEventListener('mouseleave', () => {
+    // Cancel if hover was too short
+    if (hoverTimeout && !isExpanded) {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = null;
+    }
+  });
+
+  // Theme toggle easter egg - circular expansion from dot
+  dot?.addEventListener('click', async (e) => {
+    e.stopPropagation(); // Don't trigger logo wrapper events
+
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    // Check if View Transitions API is supported
+    if (!document.startViewTransition) {
+      // Fallback for browsers without View Transitions
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      return;
+    }
+
+    // Get dot position for circle origin
+    const dotRect = (e.target as HTMLElement).getBoundingClientRect();
+    const x = dotRect.left + dotRect.width / 2;
+    const y = dotRect.top + dotRect.height / 2;
+
+    // Calculate max radius to cover entire screen from dot position
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    // Start transition and wait for it to be ready
+    const transition = document.startViewTransition(() => {
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+
+    // Wait for transition pseudo-elements to be created
+    await transition.ready;
+
+    // Animate circular clip-path expansion from dot position
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ]
+      },
+      {
+        duration: 900,
+        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        pseudoElement: '::view-transition-new(root)'
+      }
+    );
+  });
+</script>
