@@ -5,6 +5,22 @@ import SocialLinks from "../components/SocialLinks.astro";
 
 const projects = [
   {
+    id: "reach-ichack",
+    title: "Reach — IC Hack 26",
+    description: "Dual-sided volunteering platform connecting volunteers with charities through real-time smart matching and verified impact tracking, built at IC Hack 26.",
+    details: `• Built at IC Hack 26 — the UK's biggest student-run hackathon (700+ participants, 24 hours at Imperial College London) — as part of a 6-person team over a single night.
+
+• Developed a dual-sided mobile and web platform matching volunteers to charities via smart filtering across availability, location radius (up to 25 miles), transport mode, and interests — directly addressing operational failures in real-world volunteering coordination, validated with a soup kitchen coordinator.
+
+• Implemented a structured workflow engine (pending → accepted → in-progress → completed) with a dual-verification system requiring confirmation from both volunteer and charity, ensuring accountability and reducing coordinator burden.
+
+• Engineered a FastAPI backend with Firebase Firestore for real-time data sync, a React Native mobile app for volunteers, and a React web dashboard for charity coordinators — delivering two fully functional platforms within the 24-hour window.
+
+• Shifted product focus mid-build based on stakeholder feedback, deprioritising surface-level engagement analytics in favour of reliability metrics and live map-based job guidance — a key lesson in building for real operational needs.`,
+    tags: ["React Native", "FastAPI", "Firebase", "TypeScript", "Claude"],
+    link: "https://devpost.com/software/reach-vc5l8u",
+  },
+  {
     id: "countertime",
     title: "CounterTime",
     description: "Proof of Concept educational game built for IBM to increase SkillsBuild engagement.",
@@ -52,7 +68,7 @@ const projects = [
   <Menu currentPage="projects" />
   <SocialLinks />
 
-  <main class="min-h-screen flex items-center justify-center px-8 py-24 page-enter">
+  <main class="min-h-screen flex items-start justify-center px-8 py-24 page-enter">
     <div class="max-w-2xl w-full">
       <!-- Page Header -->
       <header class="mb-16 animate-fade-in">
