@@ -99,13 +99,6 @@ const projects = [
             <p class="text-[var(--color-text-secondary)] mb-4 leading-relaxed">
               {project.description}
             </p>
-            <div class="flex flex-wrap gap-2">
-              {project.tags.map((tag) => (
-                <span class="text-xs font-mono text-[var(--color-muted)] px-2 py-1 border border-[var(--color-border)] rounded">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </article>
         ))}
       </div>
@@ -125,7 +118,6 @@ const projects = [
 
         <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-[var(--color-text)] mb-4" style="font-family: var(--font-display);"></h2>
 
-        <div id="modal-tags" class="flex flex-wrap gap-2 mb-6"></div>
 
         <p id="modal-details" class="text-[var(--color-text-secondary)] leading-relaxed"></p>
       </div>
@@ -243,7 +235,6 @@ const projects = [
 <script define:vars={{ projects }}>
   const modalOverlay = document.getElementById('modal-overlay');
   const modalTitle = document.getElementById('modal-title');
-  const modalTags = document.getElementById('modal-tags');
   const modalDetails = document.getElementById('modal-details');
   const modalClose = document.getElementById('modal-close');
 
@@ -256,16 +247,6 @@ const projects = [
       if (project) {
         modalTitle.textContent = project.title;
         modalDetails.textContent = project.details;
-
-        // Clear and populate tags
-        modalTags.innerHTML = '';
-        project.tags.forEach((tag) => {
-          const tagEl = document.createElement('span');
-          tagEl.className = 'text-xs font-mono px-2 py-1 rounded-full';
-          tagEl.style.cssText = 'background: var(--glass-btn-hover); color: var(--color-text-secondary); border: 1px solid var(--glass-border);';
-          tagEl.textContent = tag;
-          modalTags.appendChild(tagEl);
-        });
 
         // Show modal
         modalOverlay.classList.add('visible');
