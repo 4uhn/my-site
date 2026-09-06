@@ -1,17 +1,24 @@
 {
   "name": "jacob-portfolio",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check": "astro check",
+    "gen:mask": "node scripts/gen-mask.mjs",
+    "gen:og": "node scripts/gen-og.mjs",
+    "gen:favicon": "node scripts/gen-favicon.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.0",
     "@tailwindcss/vite": "^4.0.0",
-    "tailwindcss": "^4.0.0"
+    "playwright-core": "^1.49.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
   }
 }

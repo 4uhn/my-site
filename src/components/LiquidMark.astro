@@ -1,0 +1,401 @@
+---
+/**
+ * The `jc` monogram rendered as liquid chrome.
+ *
+ * /public/jc-mask.png is a baked bevel map of the glyphs (R = depth, 0 at the
+ * outline rising to 1 at the medial axis; G = coverage). The shader takes the
+ * gradient of that depth to get a surface normal, then refracts a flowing band
+ * pattern through it.
+ *
+ * The depth map comes from a Poisson relaxation far too slow to run at page
+ * load, so it is baked at build time (see scripts/README.md). Runtime cost is
+ * one texture upload plus one fragment shader over a 4-vertex triangle strip —
+ * no three.js, no ogl, no R3F.
+ *
+ * Degrades in three steps: no WebGL2 -> styled text mark; reduced motion -> one
+ * static frame; off-screen or tab hidden -> render loop parked.
+ */
+import { profile } from '../data/site';
+---
+
+<div class="mark" data-liquid-mark>
+  <canvas data-mark-canvas aria-hidden="true"></canvas>
+  <!-- Shown by CSS when WebGL2 is unavailable, so the mark is never missing. -->
+  <span class="mark__fallback" aria-hidden="true">{profile.monogram}</span>
+  <!-- The accent dot is hung off the glyph metrics below, not the canvas box. -->
+  <span class="mark__dot"><slot name="dot" /></span>
+</div>
+
+<style>
+  .mark {
+    /* Glyph metrics printed by scripts/gen-mask.mjs. The mask is padded, so the
+       ink stops short of the image edge; the accent dot is placed against these
+       rather than the canvas box. */
+    --ink-right: 92.97%;
+    /* Measured baseline is 25.46%; nudged down because the round `c` overshoots
+       it, so aligning to the maths leaves the dot looking high. */
+    --baseline-from-bottom: 23.4%;
+    --dot-size: 10.5%;
+
+    position: relative;
+    /* Matches the baked mask's aspect so the glyphs never distort. */
+    aspect-ratio: 1024 / 1122;
+    width: clamp(10rem, 23vw, 16rem);
+    flex: none;
+  }
+
+  /* Sits on the baseline, immediately right of the `c`. */
+  .mark__dot {
+    position: absolute;
+    left: calc(var(--ink-right) + 1.5%);
+    bottom: var(--baseline-from-bottom);
+    width: var(--dot-size);
+    aspect-ratio: 1;
+    display: block;
+  }
+
+  .mark canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mark__fallback {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    /* Right-aligned to the same ink edge the shader mask uses, so the accent
+       dot still reads as the mark's `.` when WebGL is unavailable. */
+    justify-content: flex-end;
+    padding-right: calc(100% - var(--ink-right));
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(7rem, 16vw, 11rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--color-text);
+  }
+
+  /* Set by the script when the context can't be created. */
+  .mark[data-no-webgl] canvas {
+    display: none;
+  }
+
+  .mark[data-no-webgl] .mark__fallback {
+    display: flex;
+  }
+</style>
+
+<script>
+  type Palette = { light: [number, number, number]; dark: [number, number, number]; tint: [number, number, number] };
+
+  const VERT = `#version 300 es
+  in vec2 a_pos;
+  out vec2 v_uv;
+  void main() {
+    // a_pos spans the clip-space quad; flip Y so v_uv matches image space.
+    v_uv = vec2(0.5 * (a_pos.x + 1.0), 1.0 - 0.5 * (a_pos.y + 1.0));
+    gl_Position = vec4(a_pos, 0.0, 1.0);
+  }`;
+
+  const FRAG = `#version 300 es
+  precision highp float;
+
+  in vec2 v_uv;
+  out vec4 fragColor;
+
+  uniform sampler2D u_mask;
+  uniform vec2  u_texel;        // 1 / mask size, for the gradient taps
+  uniform float u_time;
+  uniform float u_refraction;
+  uniform float u_edge;
+  uniform float u_patternBlur;
+  uniform float u_patternScale;
+  uniform float u_liquid;
+  uniform float u_bump;
+  uniform vec3  u_light;
+  uniform vec3  u_dark;
+  uniform vec3  u_tint;
+
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 34.56);
+    return fract(p.x * p.y);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i),               hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
+
+  float depthAt(vec2 uv) { return texture(u_mask, uv).r; }
+
+  // Scalar field whose sine becomes the chrome banding. Subtracting depth is
+  // what makes the bands crowd toward the bevel and read as a rounded surface.
+  float bandField(vec2 q, float d, float t) {
+    float f = q.x * 1.7 + q.y * 0.55;
+    f += 0.30 * sin(q.y * 5.0 - t * 0.35);
+    f += 0.18 * sin(q.x * 7.0 + t * 0.22);
+    // High-frequency term along one axis only. Anisotropic streaking is most of
+    // what separates "brushed metal" from "marble".
+    f += 0.10 * sin(q.x * 19.0 + q.y * 3.0 - t * 0.55);
+    f -= d * 1.6;
+    return f;
+  }
+
+  void main() {
+    vec2 uv = v_uv;
+    float cov = texture(u_mask, uv).g;
+    float d = depthAt(uv);
+
+    // Central differences on the depth map give the surface normal.
+    float dx = depthAt(uv + vec2(u_texel.x, 0.0)) - depthAt(uv - vec2(u_texel.x, 0.0));
+    float dy = depthAt(uv + vec2(0.0, u_texel.y)) - depthAt(uv - vec2(0.0, u_texel.y));
+    vec3 n = normalize(vec3(-dx * u_bump, -dy * u_bump, 1.0));
+
+    vec2 p = (uv - 0.5) * 2.0;
+    float t = u_time;
+
+    // Slow domain warp so the metal looks poured rather than scrolled.
+    vec2 w = vec2(noise(p * 1.6 + vec2(0.0, t * 0.10)),
+                  noise(p * 1.6 + vec2(4.7, t * 0.10 + 2.1))) - 0.5;
+    vec2 q = p * u_patternScale + w * u_liquid * 6.0 + n.xy * u_refraction * 40.0;
+
+    // Three samples at slightly different refraction = chromatic dispersion.
+    // Kept subtle: much past 4x and it reads as a decoding artefact.
+    float disp = u_refraction * 4.0;
+    float br = sin(bandField(q + n.xy * disp, d, t) * 3.14159265);
+    float bg = sin(bandField(q,               d, t) * 3.14159265);
+    float bb = sin(bandField(q - n.xy * disp, d, t) * 3.14159265);
+
+    // fwidth-based width keeps the hard band edges from aliasing as they move.
+    vec3 raw = vec3(br, bg, bb);
+    vec3 aa = fwidth(raw) * 0.8 + u_patternBlur;
+    vec3 bands = smoothstep(-aa, aa, raw);
+
+    // Bias toward the light end; an even split averages to mid-grey and the two
+    // letters stop reading as letters.
+    bands = bands * 0.78 + 0.22;
+
+    vec3 col = mix(u_dark, u_light, bands);
+
+    vec3 L = normalize(vec3(-0.45, 0.60, 0.75));
+    float spec = pow(max(dot(n, L), 0.0), 36.0);
+    float rim = pow(1.0 - clamp(n.z, 0.0, 1.0), 2.2);
+
+    col += spec * 0.45;
+    col = mix(col, u_tint, rim * u_edge * 0.55);
+
+    // Slight falloff toward the outline for roundness, kept mild so the
+    // silhouette stays solid.
+    col *= mix(0.80, 1.0, smoothstep(0.0, 0.18, d));
+
+    // A little grain, mostly to kill gradient banding on wide flats.
+    col += (hash(uv * 900.0 + t) - 0.5) * 0.022;
+
+    fragColor = vec4(col, smoothstep(0.35, 0.65, cov));
+  }`;
+
+  const PARAMS = {
+    refraction: 0.016,
+    edge: 0.45,
+    patternBlur: 0.006,
+    patternScale: 2.4,
+    liquid: 0.09,
+    // Lower bump = flatter normals = less puffy-plastic, less fringing.
+    bump: 17.0,
+    speed: 0.32,
+  };
+
+  const PALETTES: Record<string, Palette> = {
+    dark: { light: [0.97, 0.97, 0.99], dark: [0.14, 0.15, 0.20], tint: [0.75, 0.07, 0.24] },
+    // On white, highlights must stay below pure white or the silhouette
+    // dissolves into the page. Ceiling of ~0.82 keeps the edges readable.
+    light: { light: [0.82, 0.83, 0.88], dark: [0.12, 0.13, 0.18], tint: [0.75, 0.07, 0.24] },
+  };
+
+  function compile(gl: WebGL2RenderingContext, type: number, src: string) {
+    const sh = gl.createShader(type)!;
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error('[LiquidMark] shader compile failed:', gl.getShaderInfoLog(sh));
+      gl.deleteShader(sh);
+      return null;
+    }
+    return sh;
+  }
+
+  async function init(root: HTMLElement) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-mark-canvas]');
+    if (!canvas) return;
+
+    // premultipliedAlpha:false because the shader writes straight colour with
+    // coverage in alpha; letting the browser premultiply would grey the edges.
+    const gl = canvas.getContext('webgl2', {
+      alpha: true,
+      premultipliedAlpha: false,
+      antialias: false,
+      powerPreference: 'low-power',
+    });
+    if (!gl) {
+      root.setAttribute('data-no-webgl', '');
+      return;
+    }
+
+    const vs = compile(gl, gl.VERTEX_SHADER, VERT);
+    const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) {
+      root.setAttribute('data-no-webgl', '');
+      return;
+    }
+
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('[LiquidMark] link failed:', gl.getProgramInfoLog(prog));
+      root.setAttribute('data-no-webgl', '');
+      return;
+    }
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    const u = (name: string) => gl.getUniformLocation(prog, name);
+    const U = {
+      mask: u('u_mask'), texel: u('u_texel'), time: u('u_time'),
+      refraction: u('u_refraction'), edge: u('u_edge'), patternBlur: u('u_patternBlur'),
+      patternScale: u('u_patternScale'), liquid: u('u_liquid'), bump: u('u_bump'),
+      light: u('u_light'), dark: u('u_dark'), tint: u('u_tint'),
+    };
+
+    // An <img> rather than fetch + createImageBitmap, so this reuses the
+    // <link rel="preload" as="image"> in the layout — a fetch() has a different
+    // request destination and would download the mask a second time.
+    // Premultiplication is moot: the mask is baked opaque, with coverage in the
+    // green channel.
+    const img = new Image();
+    img.src = '/jc-mask.png';
+    try {
+      await img.decode();
+    } catch (err) {
+      console.error('[LiquidMark] could not load the bevel mask:', err);
+      root.setAttribute('data-no-webgl', '');
+      return;
+    }
+
+    const tex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    const maskW = img.naturalWidth;
+    const maskH = img.naturalHeight;
+
+    gl.uniform1i(U.mask, 0);
+    gl.uniform2f(U.texel, 1 / maskW, 1 / maskH);
+    gl.uniform1f(U.refraction, PARAMS.refraction);
+    gl.uniform1f(U.edge, PARAMS.edge);
+    gl.uniform1f(U.patternBlur, PARAMS.patternBlur);
+    gl.uniform1f(U.patternScale, PARAMS.patternScale);
+    gl.uniform1f(U.liquid, PARAMS.liquid);
+    gl.uniform1f(U.bump, PARAMS.bump);
+
+    gl.clearColor(0, 0, 0, 0);
+
+    function applyTheme() {
+      const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const p = PALETTES[theme];
+      gl!.uniform3fv(U.light, p.light);
+      gl!.uniform3fv(U.dark, p.dark);
+      gl!.uniform3fv(U.tint, p.tint);
+    }
+    applyTheme();
+    new MutationObserver(applyTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    function resize() {
+      // Cap DPR at 2: past that the extra fragments buy nothing visible.
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(1, Math.round(canvas!.clientWidth * dpr));
+      const h = Math.max(1, Math.round(canvas!.clientHeight * dpr));
+      if (canvas!.width === w && canvas!.height === h) return;
+      canvas!.width = w;
+      canvas!.height = h;
+      gl!.viewport(0, 0, w, h);
+    }
+    resize();
+    new ResizeObserver(resize).observe(canvas);
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function draw(t: number) {
+      gl!.uniform1f(U.time, t);
+      gl!.clear(gl!.COLOR_BUFFER_BIT);
+      gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
+    }
+
+    // Reduced motion still gets the chrome mark, just frozen on one frame.
+    if (reduced.matches) {
+      draw(0);
+      reduced.addEventListener('change', () => location.reload(), { once: true });
+      return;
+    }
+
+    let clock = 0;
+    let last = performance.now();
+    let frame = 0;
+    let onScreen = true;
+
+    function tick(now: number) {
+      clock += (now - last) * 0.001 * PARAMS.speed;
+      last = now;
+      draw(clock);
+      frame = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      if (frame) return;
+      last = performance.now();
+      frame = requestAnimationFrame(tick);
+    }
+    function stop() {
+      if (!frame) return;
+      cancelAnimationFrame(frame);
+      frame = 0;
+    }
+
+    // Park the loop whenever the mark can't be seen.
+    new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+        onScreen && !document.hidden ? start() : stop();
+      },
+      { rootMargin: '100px' }
+    ).observe(canvas);
+
+    document.addEventListener('visibilitychange', () => {
+      document.hidden || !onScreen ? stop() : start();
+    });
+
+    start();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-liquid-mark]').forEach(init);
+</script>

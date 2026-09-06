@@ -1,0 +1,80 @@
+---
+/**
+ * Source frame for /public/og.png — screenshotted at 1200x630 by
+ * scripts/gen-og.mjs, not meant to be linked. Kept in the repo so the social
+ * card can be regenerated whenever the mark or the tagline changes.
+ */
+import Layout from '../layouts/Layout.astro';
+import LiquidMark from '../components/LiquidMark.astro';
+import { profile } from '../data/site';
+---
+
+<Layout title="og" noindex>
+  <div class="og" data-og-frame>
+    <div class="og__mark">
+      <LiquidMark>
+        <span class="og__dot" slot="dot"></span>
+      </LiquidMark>
+    </div>
+    <div class="og__text">
+      <p class="og__name">{profile.name}<span class="dot">.</span></p>
+      <p class="og__role">Software engineer building agentic AI systems<br />that hold up outside the demo.</p>
+      <p class="og__meta">Durham MEng &nbsp;·&nbsp; ex-Amazon &nbsp;·&nbsp; jacobchau.vercel.app</p>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .og {
+    width: 1200px;
+    height: 630px;
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    padding: 0 5rem;
+    background-color: var(--color-background);
+    overflow: hidden;
+  }
+
+  .og__mark {
+    flex: none;
+    /* Overrides LiquidMark's responsive clamp for the fixed card size. */
+    --og-mark: 240px;
+  }
+
+  .og__mark :global(.mark) {
+    width: var(--og-mark);
+  }
+
+  .og__dot {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+  }
+
+  .og__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 76px;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .og__role {
+    margin-top: 1.25rem;
+    font-size: 28px;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+  }
+
+  .og__meta {
+    margin-top: 2.25rem;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+</style>

@@ -1,0 +1,220 @@
+---
+/**
+ * Projects, expanded in place rather than in a modal.
+ *
+ * Title, summary and link are always on the page; only the deeper bullets sit
+ * behind a native <details>, which is keyboard-accessible, crawlable, and works
+ * with JavaScript switched off.
+ */
+import { projects } from '../data/site';
+---
+
+<div class="work reveal-stagger">
+  {
+    projects.map((p) => (
+      <article class="work__item">
+        <h3 class="work__title">
+          {p.title}<span class="dot">.</span>
+        </h3>
+
+        <p class="work__blurb">{p.blurb}</p>
+
+        <details class="work__detail">
+          {/* Real text rather than CSS generated content, which is an unreliable
+              accessible name. Naming each after its project also means a screen
+              reader listing controls hears four distinct labels, not four
+              identical ones. */}
+          <summary class="work__summary">
+            <span class="work__summaryOpen">How {p.title} was built</span>
+            <span class="work__summaryClose">Close</span>
+            <span class="work__chev" aria-hidden="true" />
+          </summary>
+          <ul class="work__points">
+            {p.points.map((pt) => (
+              <li>{pt}</li>
+            ))}
+          </ul>
+        </details>
+
+        {p.href && (
+          <a class="work__link" href={p.href} target="_blank" rel="noopener noreferrer">
+            <span class="uline">{p.linkLabel ?? 'View'}</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        )}
+      </article>
+    ))
+  }
+</div>
+
+<style>
+  .work {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .work__item {
+    padding-block: 2.5rem;
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .work__item:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .work__item:last-child {
+    padding-bottom: 0;
+  }
+
+  .work__title {
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .work__blurb {
+    color: var(--color-text-secondary);
+    max-width: var(--measure);
+  }
+
+  /* ---- disclosure ---- */
+
+  .work__detail {
+    margin-top: 1.25rem;
+  }
+
+  .work__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    transition: color 0.25s ease;
+    list-style: none;
+    width: fit-content;
+  }
+
+  .work__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .work__summary:hover {
+    color: var(--color-text);
+  }
+
+  /* display:none also keeps the inactive label out of the accessibility tree,
+     so only one of the two is ever announced. */
+  .work__summaryClose {
+    display: none;
+  }
+
+  .work__detail[open] .work__summaryOpen {
+    display: none;
+  }
+
+  .work__detail[open] .work__summaryClose {
+    display: inline;
+  }
+
+  .work__chev {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg) translateY(-1px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .work__detail[open] .work__chev {
+    transform: rotate(-135deg) translateY(-1px);
+  }
+
+  .work__points {
+    margin: 1.1rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    max-width: var(--measure);
+  }
+
+  .work__points li {
+    position: relative;
+    padding-left: 1.1rem;
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  .work__points li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+  }
+
+  /* Content fades up on open — no JS, works everywhere. */
+  @keyframes detail-in {
+    from {
+      opacity: 0;
+      transform: translateY(-0.4rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .work__detail[open] .work__points {
+      animation: detail-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+  }
+
+  /* Progressive enhancement: where ::details-content exists, animate the height
+     too so surrounding content slides rather than jumps. */
+  @supports selector(::details-content) {
+    .work__detail::details-content {
+      block-size: 0;
+      overflow: hidden;
+      transition: block-size 0.36s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.36s allow-discrete;
+    }
+
+    .work__detail[open]::details-content {
+      block-size: auto;
+    }
+  }
+
+  @supports (interpolate-size: allow-keywords) {
+    :root {
+      interpolate-size: allow-keywords;
+    }
+  }
+
+  /* ---- link ---- */
+
+  .work__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    transition: color 0.25s ease;
+  }
+
+  .work__link:hover {
+    color: var(--color-accent);
+  }
+</style>

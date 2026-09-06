@@ -1,0 +1,179 @@
+---
+/**
+ * Section nav for the left rail, with a progress dot that rides the rule.
+ *
+ * The dot position and the active highlight both come from one scroll probe, so
+ * they cannot drift apart.
+ */
+import { sections } from '../data/site';
+
+const navItems = sections.filter((s) => s.id !== 'top');
+---
+
+<nav class="rail" aria-label="Sections">
+  <ol class="rail__track">
+    <span class="rail__progress" data-rail-dot aria-hidden="true"></span>
+    {
+      navItems.map((s) => (
+        <li>
+          <a href={`#${s.id}`} class="rail__link" data-rail-link={s.id}>
+            <span class="rail__tick" aria-hidden="true" />
+            {s.label}
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  /* Full-height sticky cell with centred contents, so the nav reads as
+     vertically centred at every scroll position. */
+  .rail {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: 100svh;
+    display: flex;
+    align-items: center;
+  }
+
+  .rail__track {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    /* Separates the rule and dot from the labels, so the indicator reads as its
+       own element rather than as stray punctuation. */
+    padding: 0 0 0 2.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+
+  /* The rule the dot travels along. */
+  .rail__track::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    width: 1px;
+    background-color: var(--color-hairline);
+  }
+
+  .rail__progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent);
+    /* `top` is set in px by the script. */
+    transition: top 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rail__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    transition: color 0.25s ease;
+  }
+
+  .rail__tick {
+    display: block;
+    width: 1rem;
+    height: 1px;
+    background-color: currentColor;
+    transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rail__link:hover,
+  .rail__link:focus-visible {
+    color: var(--color-text);
+  }
+
+  .rail__link:hover .rail__tick {
+    width: 1.75rem;
+  }
+
+  .rail__link[aria-current="true"] {
+    color: var(--color-text);
+  }
+
+  .rail__link[aria-current="true"] .rail__tick {
+    width: 2.25rem;
+    background-color: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail__progress {
+      transition: none;
+    }
+  }
+
+  /* No room for a rail, and the page is a short scroll at this width. */
+  @media (max-width: 60rem) {
+    .rail {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const dot = document.querySelector<HTMLElement>('[data-rail-dot]');
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-rail-link]')];
+  const targets = links.map((a) => document.getElementById(a.dataset.railLink!));
+
+  // Bail rather than half-work if the markup and the data drift apart.
+  if (dot && links.length && targets.every((t): t is HTMLElement => Boolean(t))) {
+    const sections = targets as HTMLElement[];
+
+    /** Vertical centre of a nav item, relative to the track. */
+    const centreOf = (el: HTMLElement) => el.offsetTop + el.offsetHeight / 2;
+
+    let frame = 0;
+
+    function update() {
+      frame = 0;
+
+      // A section becomes current once it reaches the upper third of the
+      // viewport, which is roughly where the eye sits.
+      const probe = window.scrollY + window.innerHeight * 0.35;
+
+      let i = 0;
+      for (let k = 0; k < sections.length; k++) {
+        if (sections[k].offsetTop <= probe) i = k;
+      }
+
+      // The last section is shorter than the gap between the probe line and the
+      // bottom of the viewport, so the probe can never reach its top. Without
+      // this, Contact stays unreachable however far you scroll.
+      const atBottom =
+        window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+      if (atBottom) i = sections.length - 1;
+
+      dot!.style.top = `${centreOf(links[i]) - dot!.offsetHeight / 2}px`;
+
+      links.forEach((a, k) =>
+        k === i ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')
+      );
+    }
+
+    function schedule() {
+      if (!frame) frame = requestAnimationFrame(update);
+    }
+
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    // Section offsets shift as disclosures open and close.
+    new ResizeObserver(schedule).observe(document.body);
+    update();
+  }
+</script>

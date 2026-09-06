@@ -1,0 +1,106 @@
+---
+import { timeline } from '../data/site';
+---
+
+<ol class="tl reveal-stagger">
+  {
+    timeline.map((e) => (
+      <li class="tl__item">
+        <span class="tl__when label">{e.when}</span>
+        <div class="tl__body">
+          <h3 class="tl__what">
+            {e.what}
+            <span class="tl__where">{e.where}</span>
+          </h3>
+          {e.note && <p class="tl__note">{e.note}</p>}
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .tl {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tl__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 0 2rem;
+    padding: 0 0 2.25rem 1.5rem;
+    border-left: 1px solid var(--color-hairline);
+  }
+
+  .tl__item:last-child {
+    padding-bottom: 0;
+    /* Stop the rule dangling past the final entry. */
+    border-left-color: transparent;
+  }
+
+  .tl__item:last-child::after {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 1px;
+    height: 0.75rem;
+    background-color: var(--color-hairline);
+  }
+
+  /* Entry marker. */
+  .tl__item::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 0.5rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--color-border);
+    transition: background-color 0.28s ease, box-shadow 0.28s ease;
+  }
+
+  .tl__item:hover::before {
+    background-color: var(--color-accent);
+    box-shadow: 0 0 10px var(--color-accent);
+  }
+
+  .tl__when {
+    padding-top: 0.2rem;
+  }
+
+  .tl__what {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .tl__where {
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+
+  .tl__note {
+    margin-top: 0.4rem;
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    max-width: var(--measure);
+  }
+
+  @media (max-width: 40rem) {
+    .tl__item {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+  }
+</style>

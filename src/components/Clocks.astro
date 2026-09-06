@@ -1,0 +1,83 @@
+---
+/**
+ * Live local time for each of `profile.locations`.
+ *
+ * Server-renders a real value so there's no empty flash, then ticks on the minute.
+ */
+import { profile } from '../data/site';
+
+function timeIn(tz: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(new Date());
+}
+---
+
+<ul class="clocks" data-clocks>
+  {
+    profile.locations.map((loc) => (
+      <li class="clocks__item">
+        <span class="clocks__place">{loc.label}</span>
+        <time class="clocks__time" data-tz={loc.tz}>
+          {timeIn(loc.tz)}
+        </time>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .clocks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+  }
+
+  .clocks__item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+  }
+
+  .clocks__place {
+    color: var(--color-muted);
+  }
+
+  .clocks__time {
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<script>
+  const times = document.querySelectorAll<HTMLTimeElement>('[data-clocks] [data-tz]');
+
+  if (times.length) {
+    const fmt = (tz: string) =>
+      new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: tz,
+      }).format(new Date());
+
+    const tick = () => times.forEach((el) => (el.textContent = fmt(el.dataset.tz!)));
+
+    tick();
+    // Align to the next minute boundary, then tick once a minute. Polling every
+    // second would be 60x the wakeups for a display that changes once a minute.
+    const msToNextMinute = 60_000 - (Date.now() % 60_000);
+    setTimeout(() => {
+      tick();
+      setInterval(tick, 60_000);
+    }, msToNextMinute);
+  }
+</script>

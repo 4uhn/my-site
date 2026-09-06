@@ -7,153 +7,177 @@
 }
 
 /* ========================================
-   THEME SYSTEM - Dark (default) & Light
+   THEME
    ======================================== */
 
 :root {
-  /* Accent colors - SAME for both themes (the red dot stays red) */
+  /* Identical in both themes — the dot stays the dot. */
   --color-accent: #be123c;
-  --color-accent-dark: #9f1239;
-  --color-accent-hover: #e11d48;
+
+  --rail-w: 11rem;
+  /* Fixed rather than viewport-relative: a clamp collapses just above the 60rem
+     breakpoint, where the rail is still shown but the window is narrow. The
+     content column absorbs the difference instead. */
+  --rail-gap: 11rem;
+  --gutter: clamp(1.5rem, 5vw, 6rem);
+  /* Reading measure for prose. */
+  --measure: 40rem;
 }
 
-/* Dark Theme (Default) */
 :root,
 :root[data-theme="dark"] {
   --color-background: #0a0a0b;
-  --color-surface: #111113;
   --color-border: #1f1f23;
   --color-muted: #71717a;
   --color-text: #fafafa;
   --color-text-secondary: #a1a1aa;
-
-  /* Glass effect colors */
-  --glass-bg: rgba(17, 17, 19, 0.85);
-  --glass-bg-end: rgba(10, 10, 11, 0.9);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-highlight: rgba(255, 255, 255, 0.03);
-  --glass-highlight-top: rgba(255, 255, 255, 0.06);
-  --glass-shadow: rgba(0, 0, 0, 0.5);
-  --glass-btn-bg: rgba(255, 255, 255, 0.03);
-  --glass-btn-border: rgba(255, 255, 255, 0.05);
-  --glass-btn-hover: rgba(255, 255, 255, 0.08);
-  --overlay-bg: rgba(10, 10, 11, 0.6);
+  --color-hairline: rgba(255, 255, 255, 0.07);
 }
 
-/* Light Theme (Apple White) */
 :root[data-theme="light"] {
   --color-background: #ffffff;
-  --color-surface: #f5f5f7;
   --color-border: #d2d2d7;
   --color-muted: #86868b;
   --color-text: #1d1d1f;
   --color-text-secondary: #515154;
-
-  /* Glass effect colors - Light mode (clean white with subtle definition) */
-  --glass-bg: rgba(255, 255, 255, 0.82);
-  --glass-bg-end: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.7);
-  --glass-highlight-top: rgba(255, 255, 255, 0.85);
-  --glass-shadow: rgba(0, 0, 0, 0.1);
-  --glass-btn-bg: rgba(0, 0, 0, 0.04);
-  --glass-btn-border: rgba(0, 0, 0, 0.08);
-  --glass-btn-hover: rgba(0, 0, 0, 0.06);
-  --overlay-bg: rgba(0, 0, 0, 0.25);
+  --color-hairline: rgba(0, 0, 0, 0.1);
 }
 
 /* ========================================
-   VIEW TRANSITION ANIMATIONS
+   BASE
    ======================================== */
 
-/* ========================================
-   BASE STYLES
-   ======================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 html {
+  /* Native smooth scroll only — no scroll-jacking library. */
   scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
+  margin: 0;
   background-color: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.5s ease, color 0.5s ease;
+  transition: background-color 0.45s ease, color 0.45s ease;
 }
 
 ::selection {
   background-color: var(--color-accent);
-  color: white;
+  color: #fff;
+}
+
+/* Anything reachable by keyboard must be visible when it is reached. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ========================================
-   ANIMATIONS
+   TYPE
    ======================================== */
 
-/* Subtle link underline animation */
-.link-underline {
-  position: relative;
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  margin: 0;
+  text-wrap: balance;
 }
 
-.link-underline::after {
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Small mono label used for every section heading and metadata line. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* The accent dot that terminates every section heading. */
+.dot {
+  color: var(--color-accent);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Underline that wipes in from the left, used on every inline link. */
+.uline {
+  position: relative;
+  display: inline-block;
+}
+
+.uline::after {
   content: "";
   position: absolute;
-  bottom: -2px;
   left: 0;
-  width: 0;
-  height: 1px;
-  background-color: var(--color-accent);
-  transition: width 0.3s ease;
-}
-
-.link-underline:hover::after {
+  bottom: -0.1em;
   width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Fade in animation - pure opacity for smoothest performance */
-@keyframes fadeIn {
+.uline:hover::after,
+.uline:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ========================================
+   SCROLL-DRIVEN REVEALS
+
+   Content is visible by default and animated only where scroll timelines are
+   supported and the user hasn't asked for less motion. Written this way round so
+   browsers without animation-timeline get plain content rather than a blank page.
+   ======================================== */
+
+@keyframes reveal-in {
   from {
     opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  opacity: 0;
-  animation: fadeIn 0.7s ease-out forwards;
-}
-
-.animate-delay-100 { animation-delay: 0.12s; }
-.animate-delay-200 { animation-delay: 0.18s; }
-.animate-delay-300 { animation-delay: 0.24s; }
-.animate-delay-400 { animation-delay: 0.3s; }
-.animate-delay-500 { animation-delay: 0.36s; }
-.animate-delay-600 { animation-delay: 0.42s; }
-
-/* Page transition - simple fade */
-.page-enter {
-  opacity: 0;
-  animation: fadeIn 0.6s ease-out forwards;
-}
-
-/* Respect reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .animate-fade-in,
-  .page-enter {
-    animation: none;
-    opacity: 1;
-  }
-}
-
-/* Slide down animation for menu */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(1.25rem);
   }
   to {
     opacity: 1;
@@ -161,35 +185,20 @@ body {
   }
 }
 
-.animate-slide-down {
-  animation: slideDown 0.3s ease-out forwards;
-}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 28%;
+    }
 
-/* Stagger children animation */
-.stagger-children > * {
-  opacity: 0;
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
-
-/* Hover lift effect */
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-}
-
-/* Scale on hover */
-.hover-scale {
-  transition: transform 0.2s ease;
-}
-
-.hover-scale:hover {
-  transform: scale(1.05);
+    /* Each child gets its own view timeline, so they reveal in turn as they
+       enter rather than needing hand-assigned delays. */
+    .reveal-stagger > * {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 2% cover 26%;
+    }
+  }
 }
